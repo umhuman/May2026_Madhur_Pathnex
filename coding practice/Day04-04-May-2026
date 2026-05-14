@@ -9,11 +9,13 @@ pipeline {
              echo 'Building project'
 	        }
       }
+
       stage('Test') {
            steps {
-             echo 'Deploying application'
+             echo 'Testing application'
 	         }
         }
+
       stage('Deploy') {
           steps {
               echo 'Deploying application'
@@ -51,23 +53,26 @@ deploy:
 Task03 -  Ansible — Install and Configure Nginx
 
 
-- name: Install and configure Nginx 
+- name: Install and configure Nginx
   hosts: all
   become: yes
+
   tasks:
     - name: Install nginx
-      yum: 
+      yum:
         name: nginx
-	state: present
-    - name: configure nginx
-      template: 
+        state: present
+
+    - name: Configure nginx
+      template:
         src: nginx.conf.j2
-	dest: /etc/nginx/nginx.conf
+        dest: /etc/nginx/nginx.conf
+
     - name: Start nginx service
-      service: 
+      service:
         name: nginx
-	state: started
-	enabled: yes
+        state: started
+        enabled: yes
 
 
 
@@ -75,7 +80,7 @@ Task04 -   Terraform — EC2 with Security Group
 
 
 
-resource "aws_security_group" "Pathnex" {
+resource "aws_security_group" "pathnex" {
   name        = "Pathnex_security_group"
   description = "Allow SSH and HTTP"
   ingress {
@@ -91,12 +96,16 @@ resource "aws_security_group" "Pathnex" {
     protocol     = "tcp"
     cidr_blocks  = ["0.0.0.0/0"]
   }
+
   egress {
     from_port    = 0
     to_port      = 0
     protocol     = "-1"
     cidr_blocks  = ["0.0.0.0/0"]
   }
+  
+  tags = {
+    Name = "Pathnex-SG"
 }
 
 

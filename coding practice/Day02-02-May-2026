@@ -1,28 +1,30 @@
+Task01 -
+
 - name: Install and start Nginx on Madhur 
-  host: all
+  hosts: all
   become: yes
 
   tasks: 
     - name: Install nginx
       yum: 
         name: nginx
-	state: present
+	      state: present
 
     - name: Enable nginx
       service: 
         name: nginx
-	state: started
-	enabled: yes
+	      state: started
+	      enabled: yes
 
 
-task name -   Terraform — EC2 with Tags (r5.2xlarge)
+task02 -   Terraform — EC2 with Tags (r5.2xlarge)
 
 provider "aws" {
-  region ="us-east-1"
+  region = "us-east-1"
 }
 
 resource "aws_instance" "PathnexEC2" {
-  ami           = "ami-903rujkbskdjffw89y"
+  ami           = "ami-0abcdef1234567890"
   instance_type = "r5.2xlarge"
 
   tags = {
@@ -35,19 +37,21 @@ resource "aws_instance" "PathnexEC2" {
 
 
 
-task -  Kubernetes — Deployment with 2 Replicas
-
-
+task03 -  Kubernetes — Deployment with 2 Replicas
 
 apiVersion: apps/v1
 kind: Deployment
+
 metadata: 
   name: Pathnex-deployment
+
 spec: 
   replicas: 2
+
   selector:
     matchLabels:
       app: pathnex-app
+
   template: 
     metadata:
       labels:
@@ -55,6 +59,6 @@ spec:
     spec:
       containers:
         - name: app
-	  image: nginx
-	  ports: 
-	  - containerPort: 80
+          image: nginx
+          ports: 
+	         - containerPort: 80
