@@ -19,7 +19,7 @@ Task01 -  Ansible — Create and Start EC2 Instances
         region: us-west-1
         instance_type: t2.micro
         image: ami-0abcd1234abcd1234
-	wait: yes
+        wait: yes
 
 
 
