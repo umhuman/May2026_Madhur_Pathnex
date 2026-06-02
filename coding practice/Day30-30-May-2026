@@ -1,0 +1,274 @@
+Task01 - Creating cloud infrastructure using Infrastructure as Code
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_vpc" "pathnex_vpc" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "pathnex-vpc"
+  }
+}
+
+resource "aws_security_group" "pathnex_sg" {
+  name   = "pathnex-sg"
+  vpc_id = aws_vpc.pathnex_vpc.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+
+
+Task02 - Package the application into a portable container
+
+FROM node:20
+
+WORKDIR /app
+
+COPY . .
+
+RUN npm install
+
+EXPOSE 3000
+
+CMD ["npm","start"]
+
+# Build image
+
+docker build -t pathnex:latest .
+
+
+Task03 - Deploy application containers inside Kubernetes.
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: pathnex-app
+
+spec:
+  replicas: 3
+
+  selector:
+    matchLabels:
+      app: pathnex
+
+  template:
+    metadata:
+      labels:
+        app: pathnex
+
+    spec:
+      containers:
+      - name: pathnex
+
+        image: yourdockerhub/pathnex:latest
+
+        ports:
+        - containerPort: 8080
+
+
+# Deploy 
+kubectl apply -f deployment.yaml
+
+
+Task04 - Make the application accessible externally.
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: pathnex-service
+
+spec:
+  type: LoadBalancer
+
+  selector:
+    app: pathnex
+
+  ports:
+  - port: 80
+    targetPort: 8080
+
+
+
+
+# Deploy 
+kubectl apply -f service.yaml
+
+
+
+Task05 - Jenkins Continuous Integration Pipeline
+
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage('Checkout Source Code') {
+            steps {
+                git 'https://gitlab.com/your-project.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t pathnex .'
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh 'docker push yourdockerhub/pathnex:latest'
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f kubernetes/'
+            }
+        }
+    }
+}
+
+
+
+Task06 - GitLab CI/CD Pipeline to Trigger automated build and deployment
+
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+
+  script:
+    - docker build -t pathnex .
+
+deploy:
+  stage: deploy
+
+  script:
+    - kubectl apply -f kubernetes/
+
+
+
+Task07 - Kubernetes Network Security Policy to Restrict pod-to-pod communication
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+
+metadata:
+  name: pathnex-policy
+
+spec:
+  podSelector:
+    matchLabels:
+      app: pathnex
+
+  policyTypes:
+    - Ingress
+
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend
+
+
+# Apply policy
+kubectl apply -f network-policy.yaml
+
+
+
+
+
+# TASK 9: PROMETHEUS MONITORING SETUP
+# Purpose: Install Prometheus to collect cluster metrics
+
+
+echo "Adding Prometheus Helm repository..."
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+echo "Updating Helm repositories..."
+helm repo update
+
+echo "Installing Prometheus..."
+helm install prometheus prometheus-community/prometheus
+
+echo "Checking Prometheus pods..."
+kubectl get pods
+
+
+
+
+
+
+
+# TASK 10: GRAFANA DASHBOARD SETUP
+# Purpose: Install Grafana for monitoring visualization
+
+
+echo "Adding Grafana Helm repository..."
+helm repo add grafana https://grafana.github.io/helm-charts
+
+echo "Updating Helm repositories..."
+helm repo update
+
+echo "Installing Grafana..."
+helm install grafana grafana/grafana
+
+echo "Getting Grafana admin password..."
+kubectl get secret grafana \
+-o jsonpath="{.data.admin-password}" | base64 --decode
+
+echo ""
+echo "Grafana installation completed."
+
+
+
+
+# TASK 11: APPLICATION SCALING DEMONSTRATION
+# Purpose: Scale Pathnex deployment from current replicas to 5
+
+echo "Scaling Pathnex deployment to 5 replicas..."
+kubectl scale deployment pathnex-app --replicas=5
+echo "Verifying scaled pods..."
+kubectl get pods
+
+
+
+# TASK 12: DEPLOYMENT VERIFICATION
+# Purpose: Verify infrastructure and application status
+
+echo "Verifying Terraform-managed infrastructure..."
+terraform apply -auto-approve
+echo "Checking Kubernetes cluster nodes..."
+kubectl get nodes
+echo "Checking all running pods..."
+kubectl get pods
+echo "Checking Kubernetes services..."
+kubectl get svc
+echo "Checking Helm releases..."
+helm list
+echo "Deployment verification completed successfully."
+
+
+
+
+
