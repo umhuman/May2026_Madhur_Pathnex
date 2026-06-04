@@ -16,7 +16,7 @@ Task01 - Ansible Task — Install Nginx on Pathnex Server
 
 Task02 - Terraform Task — Create EC2 (c5.xlarge)
 
-provide "aws" {
+provider "aws" {
   region = "us-east-1"
 }
 
@@ -40,7 +40,7 @@ metadata:
 spec:
   containers: 
     - name: web
-      image: nginx:latest
+      image: nginx:1.27
       ports:
         - containerPort: 80
 
