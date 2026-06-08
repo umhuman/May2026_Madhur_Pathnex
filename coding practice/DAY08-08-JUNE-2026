@@ -125,7 +125,7 @@ pipeline {
     }
 }
 
-# Task06 -  GitLab CI — Conditional Jobs
+# Task06 --  GitLab CI — Conditional Jobs
 
 stages: 
   - build
