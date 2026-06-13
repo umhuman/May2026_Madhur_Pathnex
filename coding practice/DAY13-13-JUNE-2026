@@ -1,0 +1,125 @@
+# Day 13 — DEBUG DAY
+
+# Task01 - Ansible (broken)
+
+- name: "Broken"
+  hosts: all
+  tasks: 
+    - name: Install
+      yum:
+        name: nginx
+        state: present 
+
+# error was -   "   -name "Broken"  " 
+
+
+
+# Task02 -  Terraform (broken)
+
+resource "aws_instance" "BadEC2" {
+  ami = "ami-123"
+instance_type="c5.large"
+tags = {
+  Name: "Broken"
+}
+}
+
+# error was - resource "aws_instance" BadEC2 
+# error was -  ami = ami-123
+# ERROR was -  Name:"Broken"
+
+
+
+# Task03 - Kubernetes (broken)
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+ name: broken
+
+spec:
+ replicas: 2
+
+ selector:
+   matchLabels:
+     app: broken
+
+ template:
+  metadata:
+    labels:
+      app broken
+
+  spec:
+    containers:
+     - name app
+       image nginx
+
+
+#  multiple syntax errors missing : and also incorrect indentation under metadata
+
+
+
+
+
+# Matrix Builds
+
+# Task04 - Jenkins Pipeline — Matrix Build
+
+pipeline {
+    agent any
+
+    environment {
+        INSTITUTE_NAME = "Pathnex"
+    }
+
+    stages {
+        stage('Matrix Build') {
+            matrix {
+                axes {
+                    axis {
+                        name 'JAVA_VERSION'
+                        values '8', '11', '17'
+                    }
+                }
+                stages {
+                    stage('Build') {
+                        steps {
+                            sh "echo Building with Java $JAVA_VERSION"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+# error The matrix block must be inside a stages block in a Declarative Jenkins Pipeline; it cannot be placed directly under pipeline.
+
+
+
+
+# Task05 - GitLab CI — Matrix Jobs
+
+stages:
+  - build
+
+build:
+  stage: build
+
+  image: $IMAGE
+
+  parallel:
+    matrix:
+      - JAVA_VERSION: "8"
+        IMAGE: "maven:3.8.8-eclipse-temurin-8"
+      - JAVA_VERSION: "11"
+        IMAGE: "maven:3.9.6-eclipse-temurin-11"
+      - JAVA_VERSION: "17"
+        IMAGE: "maven:3.9.6-eclipse-temurin-17"
+  script:
+    - echo "Building with Java $JAVA_VERSION"
+    - java -version
+
+# ERROR - The matrix variable JAVA_VERSION is defined, but the job uses a fixed image so all builds run on Java 17 instead of the intended Java versions.
