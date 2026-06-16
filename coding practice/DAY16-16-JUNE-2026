@@ -1,0 +1,188 @@
+# Day 16 — Ansible Roles, DynamoDB, StatefulSet, Service Check
+
+# Task01 - Ansible — Create Role Structure
+
+# Students must create:
+# roles/
+#   pathnex/
+#     tasks/main.yml
+#     handlers/main.yml
+#     templates/
+#     vars/main.yml
+
+# ==============================
+# CREATE ANSIBLE ROLE STRUCTURE
+# ==============================
+
+mkdir -p roles/pathnex/{tasks,handlers,templates,vars}
+
+# ==================================
+# CREATE TASKS FILE (tasks/main.yml)
+# ==================================
+
+cat > roles/pathnex/tasks/main.yml << 'EOF'
+---
+# Install Apache HTTP Server
+- name: Install httpd
+  yum:
+    name: httpd
+    state: present
+
+# Start and enable Apache service
+- name: Start and enable httpd
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+EOF
+
+# ==========================================
+# CREATE HANDLERS FILE (handlers/main.yml)
+# ==========================================
+
+cat > roles/pathnex/handlers/main.yml << 'EOF'
+---
+# Restart Apache when notified
+- name: Restart httpd
+  service:
+    name: httpd
+    state: restarted
+EOF
+
+# ==================================
+# CREATE VARIABLES FILE (vars/main.yml)
+# ==================================
+
+cat > roles/pathnex/vars/main.yml << 'EOF'
+---
+# Package name variable
+httpd_package: httpd
+
+# Service name variable
+httpd_service: httpd
+EOF
+
+# ==================================
+# TEMPLATES DIRECTORY
+# ==================================
+# Place Jinja2 template files inside:
+# roles/pathnex/templates/
+
+# ==================================
+# RESULTING DIRECTORY STRUCTURE
+# ==================================
+# roles/
+# └── pathnex/
+#     ├── tasks/
+#     │   └── main.yml
+#     ├── handlers/
+#     │   └── main.yml
+#     ├── templates/
+#     └── vars/
+#         └── main.yml
+
+
+# Task02 - Terraform — DynamoDB Table
+
+resource "aws_dynamodb_table" "PathnexTable" {
+  name           = "PathnexTrainingTable"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "ID"
+
+  attribute {
+    name = "ID"
+    type = "S"
+  }
+
+  tags = {
+    Name = "Pathnex-DDB"
+  }
+}
+
+
+# Task03 - Kubernetes — StatefulSet
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pathnex-db
+spec:
+  serviceName: "pathnex"
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pathnex-db
+  template:
+    metadata:
+      labels:
+        app: pathnex-db
+    spec:
+      containers:
+        - name: db
+          image: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "Pathnex123"
+
+
+# Task04 - Shell Script — Check Service Running
+
+#!/bin/bash
+
+SERVICE="sshd"
+
+if systemctl is-active --quiet $SERVICE; then
+  echo "$SERVICE is running"
+else
+  echo "$SERVICE is NOT running"
+fi
+
+
+# Artifacts Promotion
+
+# Task05 - Jenkins Pipeline — Promote Artifacts
+You will learn how to **promote build artifacts from dev to staging**.
+
+pipeline {
+    agent any
+    environment {
+        INSTITUTE_NAME = "Pathnex"
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('Promote') {
+            steps {
+                input message: "Promote artifacts to staging?"
+                sh 'echo "Promoting artifacts for $INSTITUTE_NAME"'
+            }
+        }
+    }
+}
+
+
+# Task06 - GitLab CI — Artifacts Promotion
+
+stages:
+  - build
+  - promote
+
+build:
+  stage: build
+  image: maven:3.8.1-jdk-17
+  script:
+    - mvn clean package
+  artifacts:
+    paths:
+      - target/*.jar
+    expire_in: 1 week
+
+promote:
+  stage: promote
+  image: alpine:latest
+  script:
+    - echo "Promoting artifacts for Pathnex"
+  when: manual
