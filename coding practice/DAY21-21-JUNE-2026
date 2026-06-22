@@ -1,0 +1,156 @@
+# Day 21 — SPEED TYPING (LEVEL 2)
+
+You must rewrite all FOUR from scratch:
+
+1. Ansible:
+
+
+---
+- name: pathnex_web_setup
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Install NGINX package
+      package:
+        name: nginx
+        state: present
+
+    - name: Ensure NGINX service is active and persistent
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+
+
+
+2. Terraform:
+
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_instance" "pathnex_node" {
+  ami           = "ami-0c02fb55956c7d316"
+  instance_type = "t3.micro"
+
+  tags = {
+    Name  = "pathnex-server"
+    Owner = "PathnexStudent"
+  }
+}
+
+
+
+3. Kubernetes:
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pathnex-nginx
+
+spec:
+  replicas: 3
+
+  selector:
+    matchLabels:
+      component: pathnex-web
+
+  template:
+    metadata:
+      labels:
+        component: pathnex-web
+
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx
+        ports:
+        - containerPort: 80
+
+
+
+4. Shell:
+
+
+#!/bin/bash
+
+echo "PATHNEX SYSTEM REPORT"
+
+echo "Current Date & Time:"
+date
+
+echo
+echo "System Uptime:"
+uptime
+
+echo
+echo "Filesystem Utilization:"
+df -h
+
+
+
+
+# Multi-Environment Pipeline
+
+# Task05 - Jenkins Pipeline — Deploy to Multiple Environments
+
+pipeline {
+    agent any
+    environment {
+        INSTITUTE_NAME = "Pathnex"
+    }
+    stages {
+        stage('Deploy to Dev') {
+            steps {
+                sh 'echo "Deploying $INSTITUTE_NAME to Dev environment"'
+            }
+        }
+        stage('Deploy to Staging') {
+            steps {
+                input message: "Approve Staging Deployment?"
+                sh 'echo "Deploying $INSTITUTE_NAME to Staging environment"'
+            }
+        }
+        stage('Deploy to Prod') {
+            steps {
+                input message: "Approve Prod Deployment?"
+                sh 'echo "Deploying $INSTITUTE_NAME to Prod environment"'
+            }
+        }
+    }
+}
+
+
+
+# Task06 - GitLab CI — Multi-Environment
+
+
+stages:
+  - deploy
+
+variables:
+  INSTITUTE_NAME: "Pathnex"
+
+deploy-dev:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "Deploying $INSTITUTE_NAME to Dev environment"
+
+deploy-staging:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "Deploying $INSTITUTE_NAME to Staging environment"
+  when: manual
+
+deploy-prod:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "Deploying $INSTITUTE_NAME to Prod environment"
+  when: manual
